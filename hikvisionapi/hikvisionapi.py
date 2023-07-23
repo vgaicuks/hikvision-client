@@ -33,6 +33,7 @@ class DynamicMethod(object):
         assert 'method' in kwargs, "set http method in args"
         return self.client.request(self.path, **kwargs)
 
+
 async def async_response_parser(response, present='dict'):
     if inspect.iscoroutine(response):
         data = await response
@@ -229,7 +230,6 @@ class AsyncClient:
     def __getattr__(self, key: str):
         return DynamicMethod(self, key)
 
-
     async def _detect_auth_method(self):
         """Establish the connection with device"""
         full_url = urljoin(self.host, self.isapi_prefix + '/System/status')
@@ -237,10 +237,10 @@ class AsyncClient:
             httpx.BasicAuth(self.login, self.password),
             httpx.DigestAuth(self.login, self.password),
         ]:
-                async with httpx.AsyncClient(auth=method) as client:
-                    response = await client.get(full_url)
-                    if response.status_code == 200:
-                        self._auth_method = method
+            async with httpx.AsyncClient(auth=method) as client:
+                response = await client.get(full_url)
+                if response.status_code == 200:
+                    self._auth_method = method
 
         if not self._auth_method:
             response.raise_for_status()
@@ -270,6 +270,7 @@ class AsyncClient:
                     events = buffer.split("\r\n\r\n")[1:]
 
                     if not opening_tag and len(events) > 0 and ">" in events[0]:
+                        events[0] = events[0].replace('<?xml version="1.0" encoding="UTF-8" ?>', '')
                         opening_tag = events[0].split(">", 1)[0].split("<", 1)[1].split(" ")[0]
 
                     if opening_tag and f"</{opening_tag}>" in events[0]:
